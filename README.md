@@ -1,8 +1,8 @@
-# Pitch-Perfect Codebase - Complete Explanation
+# Pitch-Perfect Codebase 
 
 ## Project Overview
 
-**Pitch-Perfect** (also called **CricVision**) is a real-time cricket action recognition system that uses AI to analyze cricket shots from live camera feed. It classifies shots as **"High"** (good shot) or **"Not High"** (needs improvement) and provides voice feedback to players.
+**Pitch-Perfect** is a real-time cricket action recognition system that uses AI to analyze cricket shots from live camera feed. It classifies shots as **"High"** (good shot) or **"Not High"** (needs improvement) and provides voice feedback to players.
 
 ### What the System Does:
 1. **Captures live video** from webcam
