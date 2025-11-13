@@ -14,6 +14,46 @@
 7. **Shows real-time confidence graph** (ECG-style)
 
 ---
+##  Data Sources
+
+### **1. Real-Time Input Data (Live Camera Feed)**
+- **Source:** Webcam video stream from user's device
+- **Format:** Live video frames (RGB, 224x224 pixels)
+- **Frequency:** 5 FPS for predictions (200ms intervals), 60 FPS for display
+- **Processing:** Frames are buffered (8 frames) before sending to model
+- **Purpose:** Primary input for real-time cricket shot classification
+
+### **2. Pre-trained Feature Extractor (EfficientNetB0)**
+- **Source:** **ImageNet Dataset**
+  - 1.4 million images
+  - 1000 object classes
+  - Pre-trained weights downloaded automatically from Keras
+- **Location:** `keras.applications.EfficientNetB0(weights='imagenet')`
+- **Purpose:** Extracts 1280 visual features from each video frame
+- **Note:** This is a general-purpose image recognition model, not cricket-specific
+
+### **3. Pre-trained Classification Model (CNN + BiLSTM)**
+- **Model File:** `backend/models/cnn_bilstm_binary_classifier.keras`
+- **Training Dataset:** **Not specified in codebase** (pre-trained model only)
+- **Model Type:** Binary classifier for cricket shots
+- **Classes:** "High" (good shot) vs "Not High" (needs improvement)
+- **Input Shape:** (batch_size, 8, 1294)
+  - 8 frames (temporal sequence)
+  - 1294 features per frame (1280 from EfficientNet + 14 statistical features)
+- **Purpose:** Classifies cricket shots based on temporal patterns in video frames
+
+### **4. Pose Detection Data**
+- **Source:** **MoveNet/BlazePose Pre-trained Models** (TensorFlow.js)
+- **Location:** Downloaded automatically when frontend loads
+- **Purpose:** Detects player body keypoints for visualization
+- **Note:** Not used for classification, only for visual overlay
+
+### **5. Audio Feedback**
+- **Source:** **ElevenLabs TTS API**
+- **Purpose:** Converts text feedback messages to speech
+- **Fallback:** Browser `speechSynthesis` API if ElevenLabs unavailable
+
+---
 
 ## Architecture Overview
 
