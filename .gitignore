@@ -44,6 +44,9 @@ ENV/
 *.swo
 *~
 
+# Model files are tracked with Git LFS (see .gitattributes)
+# *.keras files are handled by Git LFS
+
 # Python version files
 .python-version
 
