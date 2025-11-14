@@ -1,4 +1,10 @@
-import type { PredictionResponse } from '../types';
+import type { PredictionResponse, ShotType } from '../types';
+
+const formatShotLabel = (shotType: ShotType): string =>
+  shotType
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
 /**
  * Mock API function that simulates the FastAPI /predict endpoint
@@ -10,17 +16,32 @@ export async function mockPredict(
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 100));
 
-  const actions: Array<'Batting' | 'Bowling' | 'Fielding'> = ['Batting', 'Bowling', 'Fielding'];
-  const randomAction = actions[Math.floor(Math.random() * actions.length)];
-  const confidence = 0.7 + Math.random() * 0.25; // Random confidence between 0.7 and 0.95
+  const shotTypes: ShotType[] = ['drive', 'sweep', 'pullshot', 'legglance_flick'];
+  const shotType = shotTypes[Math.floor(Math.random() * shotTypes.length)];
+  const shotConfidence = 0.6 + Math.random() * 0.35; // 0.6 - 0.95
+
+  const formIsHigh = Math.random() > 0.4;
+  const formConfidence = formIsHigh
+    ? 0.75 + Math.random() * 0.2
+    : 0.55 + Math.random() * 0.15;
 
   // Generate mock keypoints for skeleton overlay
   const mockKeypoints = generateMockKeypoints();
 
+  const message = formIsHigh
+    ? `Great ${shotType.replace('_', ' ')} — form looking solid!`
+    : `Your ${shotType.replace('_', ' ')} could use a bit more refinement.`;
+
   return {
-    action: randomAction,
-    confidence: Math.round(confidence * 100) / 100,
+    shot_type: shotType,
+    shot_confidence: Math.round(shotConfidence * 100) / 100,
+    form_quality: formIsHigh ? 'High' : 'Not High',
+    form_confidence: Math.round(formConfidence * 100) / 100,
+    prediction: formIsHigh ? 'High' : 'Not High',
+    confidence: Math.round(formConfidence * 100) / 100,
+    message,
     keypoints: mockKeypoints,
+    action: formatShotLabel(shotType),
   };
 }
 

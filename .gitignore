@@ -28,3 +28,32 @@ dist-ssr
 .env.local
 .env.production
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+venv_*/
+env/
+ENV/
+.venv
+*.bak
+*.swp
+*.swo
+*~
+
+# Python version files
+.python-version
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+

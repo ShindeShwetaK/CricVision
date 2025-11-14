@@ -1,18 +1,37 @@
-import type { ActionFeedback } from '../types';
+import type { ActionFeedback, PredictionResponse, ShotType } from '../types';
 import { generateAudio } from './api';
 
 // Track current audio playback to prevent overlap
 let currentAudio: HTMLAudioElement | null = null;
 let isPlaying = false;
 
+const formatShotLabel = (shotType: ShotType): string =>
+  shotType
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+const buildDefaultMessage = (prediction: PredictionResponse): string => {
+  const shotText = formatShotLabel(prediction.shot_type);
+  if (prediction.form_quality === 'High') {
+    return `Beautiful ${shotText} — excellent form!`;
+  }
+  return `${shotText} needs better timing. Let's tighten the form next attempt.`;
+};
+
 /**
- * Get feedback message for an action
- * Uses the message from backend prediction response
+ * Get feedback message for an action.
+ * Prefers backend message but falls back to synthesized messaging.
  */
-export function getActionFeedback(action: 'High' | 'Not High', message?: string): ActionFeedback {
+export function getActionFeedback(prediction: PredictionResponse): ActionFeedback {
+  const message =
+    (prediction.message && prediction.message.trim().length > 0
+      ? prediction.message
+      : buildDefaultMessage(prediction));
+
   return {
-    action,
-    message: message || (action === 'High' ? 'Great shot!' : 'Keep practicing!'),
+    action: prediction.form_quality,
+    message,
   };
 }
 
@@ -83,19 +102,20 @@ function fallbackTTS(text: string): Promise<void> {
  * Speak action feedback with voice
  * Uses backend /generate-audio endpoint, falls back to browser TTS if backend fails
  */
-export async function speakActionFeedback(
-  action: 'High' | 'Not High',
-  confidence: number,
-  message?: string
-): Promise<void> {
+export async function speakActionFeedback(prediction: PredictionResponse): Promise<void> {
+  const feedback = getActionFeedback(prediction);
   try {
     // Try backend audio generation first
-    const audioResponse = await generateAudio(action, confidence);
+    const audioResponse = await generateAudio(prediction.form_quality, prediction.form_confidence, {
+      shotType: prediction.shot_type,
+      shotConfidence: prediction.shot_confidence,
+      formConfidence: prediction.form_confidence,
+      message: feedback.message,
+    });
     await playAudioFromBase64(audioResponse.audio_base64);
   } catch (error) {
     console.error('Backend audio generation failed:', error);
     // Fallback to browser TTS
-    const feedback = getActionFeedback(action, message);
     try {
       await fallbackTTS(feedback.message);
     } catch (fallbackError) {

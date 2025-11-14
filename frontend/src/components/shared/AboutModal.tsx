@@ -47,6 +47,21 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
         </div>
 
         <div className="mt-6 grid gap-6">
+          <section className="rounded-lg border border-orange-300 bg-orange-50/50 p-4">
+            <div className="flex items-start gap-2">
+              <svg className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <h4 className="text-sm font-semibold text-orange-900 mb-1">Important: Camera Angle Requirement</h4>
+                <p className="text-sm text-orange-800 leading-relaxed">
+                  For accurate analysis, record videos from a <strong>side angle</strong> (90° perpendicular to the batsman). 
+                  The model is trained on side-view footage, so broadcast angles or front/back views may produce inaccurate results.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section>
             <h4 className="text-lg font-semibold text-cv-text mb-3">How It Works</h4>
             <ol className="grid gap-3 text-sm sm:grid-cols-3">

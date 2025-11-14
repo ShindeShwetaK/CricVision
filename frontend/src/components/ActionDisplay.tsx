@@ -1,6 +1,16 @@
 import { useMemo } from 'react';
-import { LineChart, Line, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine, CartesianGrid } from 'recharts';
-import type { PredictionResponse } from '../types';
+import {
+  LineChart,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  ReferenceLine,
+  CartesianGrid,
+} from 'recharts';
+import type { PredictionResponse, ShotType } from '../types';
 
 interface ConfidenceDataPoint {
   time: number;
@@ -15,24 +25,21 @@ interface ActionDisplayProps {
 }
 
 export function ActionDisplay({ prediction, isActive, confidenceHistory }: ActionDisplayProps) {
-  const { chartData, lineColor, fillColor, currentConfidence } = useMemo(() => {
+  const { chartData, lineColor, fillColor } = useMemo(() => {
     if (!prediction || !isActive || confidenceHistory.length === 0) {
       return {
         chartData: [],
         lineColor: '#10b981',
         fillColor: 'url(#colorGradientGreen)',
-        currentConfidence: 0,
       };
     }
 
-    const { prediction: action, confidence } = prediction;
-    const confidencePercent = Math.round(confidence * 100);
-
     // Determine colors based on action
-    const lineColor = action === 'High' ? '#10b981' : '#f59e0b'; // Green or orange
-    const fillColor = action === 'High' 
-      ? 'url(#colorGradientGreen)' 
-      : 'url(#colorGradientOrange)';
+    const lineColor = prediction.form_quality === 'High' ? '#10b981' : '#f59e0b'; // Green or orange
+    const fillColor =
+      prediction.form_quality === 'High'
+        ? 'url(#colorGradientGreen)'
+        : 'url(#colorGradientOrange)';
 
     // Prepare chart data
     const chartData = confidenceHistory.map((point) => ({
@@ -44,7 +51,6 @@ export function ActionDisplay({ prediction, isActive, confidenceHistory }: Actio
       chartData,
       lineColor,
       fillColor,
-      currentConfidence: confidencePercent,
     };
   }, [prediction, isActive, confidenceHistory]);
 
@@ -64,16 +70,20 @@ export function ActionDisplay({ prediction, isActive, confidenceHistory }: Actio
     );
   }
 
-  const { prediction: action } = prediction;
-  const confidencePercent = Math.round(prediction.confidence * 100);
+  const shotConfidencePercent = Math.round((prediction.shot_confidence ?? 0) * 100);
+  const formConfidenceValue = prediction.form_confidence ?? prediction.confidence;
+  const formConfidenceDisplay = Math.round(formConfidenceValue * 100);
 
-  // Confidence color based on value
-  const confidenceColor =
-    prediction.confidence > 0.8
-      ? 'text-cricket-green-bright'
-      : prediction.confidence > 0.6
-      ? 'text-cricket-orange'
-      : 'text-yellow-400';
+  const formatShotLabel = (shotType: ShotType) =>
+    shotType
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+  const shotLabel = formatShotLabel(prediction.shot_type);
+  const formLabel = prediction.form_quality;
+  const formColor =
+    prediction.form_quality === 'High' ? 'text-cricket-green-bright' : 'text-cricket-orange';
 
   // Custom tooltip for ECG chart
   const CustomTooltip = ({ active, payload }: any) => {
@@ -91,21 +101,34 @@ export function ActionDisplay({ prediction, isActive, confidenceHistory }: Actio
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header with Action Label and Current Confidence */}
-      <div className="mb-4 text-center">
-        <h2 className={`text-3xl font-extrabold mb-2 bg-gradient-to-r ${
-          action === 'High' 
-            ? 'from-cricket-green to-cricket-green-bright' 
-            : 'from-cricket-orange to-yellow-400'
-        } bg-clip-text text-transparent`}>
-          {action}
-        </h2>
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-sm text-cv-muted font-medium">Confidence</span>
-          <span className={`text-2xl font-bold ${confidenceColor}`}>
-            {confidencePercent}%
+      {/* Shot Type */}
+      <div className="mb-6">
+        <span className="text-xs uppercase tracking-widest text-cv-muted">Shot Type</span>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-extrabold text-cv-text">{shotLabel}</h2>
+          <span className="px-3 py-1 rounded-full bg-cv-surface text-sm font-semibold text-cv-text">
+            {shotConfidencePercent}%
           </span>
         </div>
+        <div className="mt-3 h-2 bg-cv-border rounded-full overflow-hidden">
+          <div
+            className="h-full transition-all duration-300"
+            style={{ width: `${shotConfidencePercent}%`, backgroundColor: '#3b82f6' }}
+          />
+        </div>
+      </div>
+
+      {/* Form Quality */}
+      <div className="mb-6 grid grid-cols-1 gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-cv-muted">Form Quality</span>
+          <span className={`text-sm font-semibold ${formColor}`}>{formLabel}</span>
+        </div>
+        <div className="flex items-baseline gap-3">
+          <span className={`text-3xl font-bold ${formColor}`}>{formConfidenceDisplay}%</span>
+          <span className="text-sm text-cv-muted font-medium">confidence</span>
+        </div>
+        <p className="text-sm text-cv-muted">{prediction.message}</p>
       </div>
 
       {/* ECG Chart */}

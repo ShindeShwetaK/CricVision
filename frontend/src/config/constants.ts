@@ -28,15 +28,14 @@ export const FEATURES = [
     icon: '🎯',
   },
   {
-    title: 'AI Action Classification',
-    description: 'Classify cricket shots as High or Not High with confidence scoring.',
+    title: 'AI Shot Classification',
+    description: 'Detect shot types (drive, sweep, pullshot, legglance_flick) and classify form quality (High/Not High) with confidence scoring.',
     icon: '🤖',
   },
   {
-    title: 'Instant Voice Feedback',
-    description:
-      'Deliver contextual voice coaching using advanced text-to-speech technology.',
-    icon: '🔊',
+    title: 'Multitask Analysis',
+    description: 'Detect shot types (drive, sweep, pullshot, legglance_flick) and assess form quality simultaneously with confidence scores.',
+    icon: '📊',
   },
 ];
 
@@ -44,27 +43,27 @@ export const HOW_IT_WORKS = [
   {
     step: 1,
     title: 'Capture',
-    description: 'Use your camera to stream live player movement into the platform.',
+    description: 'Record videos from the side angle (90° perpendicular to batsman) for accurate analysis. The model is trained on side-view footage.',
   },
   {
     step: 2,
     title: 'Analyze',
     description:
-      'Pitch-Perfect processes video frames with a CNN + BiLSTM model to classify shots as High or Not High.',
+      'Pitch-Perfect processes video frames with a multitask CNN + BiLSTM model to classify shot types (drive, sweep, pullshot, legglance_flick) and form quality (High/Not High).',
   },
   {
     step: 3,
     title: 'Coach',
     description:
-      `Receive actionable insights and feedback tailored to each player's performance.`,
+      `Receive actionable insights with shot type detection and form quality analysis, including confidence scores for each prediction.`,
   },
 ];
 
 export const TECHNOLOGY_STACK = [
-  'FastAPI backend with TensorFlow inference',
-  'CNN + BiLSTM shot classification model',
-  'EfficientNet-based frame preprocessing',
-  'Real-time ElevenLabs voice feedback',
+  'FastAPI backend with TensorFlow 2.19 & Keras 3.10',
+  'Multitask CNN + BiLSTM model (shot type + form quality)',
+  'EfficientNet-B0 backbone with TimeDistributed layers',
+  'Python 3.12 backend with NumPy 2.0 & OpenCV 4.12',
   'React, TypeScript, and Tailwind CSS frontend',
 ];
 
@@ -85,6 +84,7 @@ export const ANALYSIS_DASHBOARD_PLACEHOLDER = {
 export const NAV_LINKS = [
   { label: 'Home', route: '/' },
   { label: 'Live Analysis', route: '/app' },
+  { label: 'Upload Video', route: '/upload' },
   { label: 'Session Dashboard', route: '/analysis' },
 ];
 

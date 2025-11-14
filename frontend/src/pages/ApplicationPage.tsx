@@ -4,15 +4,21 @@ import { CameraFeed } from '../components/CameraFeed';
 import { ActionDisplay } from '../components/ActionDisplay';
 import { PoseOverlay } from '../components/PoseOverlay';
 import { predictLive } from '../services/api';
-import { speakActionFeedback, stopAudio } from '../services/ttsService';
+import { getActionFeedback, speakActionFeedback, stopAudio } from '../services/ttsService';
 import { FrameBuffer } from '../utils/frameBuffer';
-import type { PredictionResponse, Keypoint } from '../types';
+import type { PredictionResponse, Keypoint, ShotType } from '../types';
 
 interface ConfidenceDataPoint {
   time: number;
   confidence: number;
   timestamp: number;
 }
+
+const formatShotLabel = (shotType: ShotType) =>
+  shotType
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
 export default function ApplicationPage() {
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -70,6 +76,10 @@ export default function ApplicationPage() {
       
       // Map backend response to frontend format
       const predictionResponse: PredictionResponse = {
+        shot_type: result.shot_type,
+        shot_confidence: result.shot_confidence,
+        form_quality: result.form_quality,
+        form_confidence: result.form_confidence,
         prediction: result.prediction,
         confidence: result.confidence,
         message: result.message,
@@ -82,7 +92,7 @@ export default function ApplicationPage() {
       setConfidenceHistory((prev) => {
         const newPoint: ConfidenceDataPoint = {
           time: timeCounterRef.current,
-          confidence: result.confidence * 100, // Convert to percentage
+          confidence: result.form_confidence * 100, // Convert to percentage
           timestamp: Date.now(),
         };
         const updated = [...prev, newPoint];
@@ -94,12 +104,16 @@ export default function ApplicationPage() {
       frameBufferRef.current.resetMotionFlag();
 
       // Voice feedback - only speak when action changes
-      if (lastActionRef.current !== result.prediction) {
-        lastActionRef.current = result.prediction;
-        setAudioTranscript(result.message);
-        speakActionFeedback(result.prediction, result.confidence, result.message).catch((err) => {
+      const feedback = getActionFeedback(predictionResponse);
+      const feedbackKey = `${result.shot_type}-${result.form_quality}`;
+      if (lastActionRef.current !== feedbackKey) {
+        lastActionRef.current = feedbackKey;
+        setAudioTranscript(feedback.message);
+        speakActionFeedback(predictionResponse).catch((err) => {
           console.error('TTS Error:', err);
         });
+      } else {
+        setAudioTranscript(feedback.message);
       }
     } catch (err) {
       console.error('Prediction error:', err);
@@ -190,6 +204,21 @@ export default function ApplicationPage() {
             onPoseDetected={handlePoseDetected}
             enablePoseDetection={true}
           />
+
+          {/* Shot Type Badge */}
+          {isCameraActive && prediction && (
+            <div className="absolute top-4 left-4 z-30 bg-black/60 backdrop-blur-sm border border-white/30 rounded-xl px-4 py-3 shadow-lg text-white">
+              <span className="text-xs uppercase tracking-widest text-white/80">Detected Shot</span>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-lg font-semibold">
+                  {formatShotLabel(prediction.shot_type)}
+                </span>
+                <span className="text-xs font-semibold text-white/80">
+                  {Math.round(prediction.shot_confidence * 100)}%
+                </span>
+              </div>
+            </div>
+          )}
           
           {/* Pose Overlay - Overlaid on video feed */}
           {isCameraActive && keypoints.length > 0 && containerDimensions.width > 0 && (
